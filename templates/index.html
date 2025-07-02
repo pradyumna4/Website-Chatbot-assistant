@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Better Analytics | Assistbot</title>
+  <link rel="icon" type="image/png" href="/static/favicon.png">
+  <link href="https://fonts.googleapis.com/css?family=Montserrat:400,700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <style>
+    body {
+      min-height: 100vh;
+      background: linear-gradient(120deg, #3d2c00 0%, #bfae5a 100%);
+      /* much darker, muted orange-yellow gradient */
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0;
+      padding: 0;
+    }
+    body::before {
+      content: "";
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      pointer-events: none;
+      z-index: 0;
+      background: url('https://www.transparenttextures.com/patterns/diamond-upholstery.png');
+      opacity: 0.10;
+    }
+  </style>
+</head>
+<body>
+  <!-- Floating Chat Button -->
+  <div id="chat-toggle" onclick="toggleChat()" title="Chat with Assistbot"><i class="fa fa-comments"></i></div>
+
+  <!-- Chatbox -->
+  <div id="chat-box">
+    <div id="chat-header" onmousedown="startDrag(event)">
+      <span><i class="fa fa-robot"></i> Assistbot</span>
+      <button onclick="toggleChat()" aria-label="Close"><i class="fa fa-times"></i></button>
+    </div>
+    <div id="chat-messages"></div>
+    <div id="typing-indicator" class="typing-indicator" style="display:none;">
+      <span></span><span></span><span></span> Bot is typing...
+    </div>
+    <div id="chat-input-area">
+      <input type="text" id="chat-input" placeholder="Ask me anything about Better Analytics..." autocomplete="off" />
+      <button onclick="sendMessage()" aria-label="Send"><i class="fa fa-paper-plane"></i></button>
+    </div>
+  </div>
+
+  <script src="/static/chat.js"></script>
+</body>
+</html>

@@ -1,0 +1,6 @@
+{
+  "start_url": "https://www.betteranalytics.in",
+  "throttle_seconds": 2,
+  "max_pages": 50,
+  "respect_robots_txt": true
+}
