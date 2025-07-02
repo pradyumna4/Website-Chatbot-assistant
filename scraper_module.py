@@ -3,7 +3,7 @@ from bs4 import BeautifulSoup
 import json
 import os
 
-DATA_FILE = r"D:\internship\Better Analytics\chatbot\scraped_data.json"
+DATA_FILE = r"D:\internship\Better Analytics\chatbot\raw data version\scraped_data.json"
 
 def scrape_page(url):
     try:

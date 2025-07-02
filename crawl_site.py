@@ -15,7 +15,7 @@ THROTTLE = config["throttle_seconds"]
 MAX_PAGES = config["max_pages"]
 RESPECT_ROBOTS = config["respect_robots_txt"]
 
-OUTPUT_FILE = r"D:\internship\Better Analytics\chatbot\crawler\scraped_data.json"
+OUTPUT_FILE = r"D:\internship\Better Analytics\chatbot\raw data version\scraped_data.json"
 
 visited = set()
 results = []

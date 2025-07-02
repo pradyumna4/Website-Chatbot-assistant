@@ -4,30 +4,26 @@ import torch
 import json
 import requests
 from sentence_transformers import SentenceTransformer, util
-from huggingface_hub import login
 from scraper_module import add_url, load_scraped_data
 import re
-
-# Optional: Only if you're using private HF models
-login(token="Enter your Huggingface token here")
 
 # Load sentence transformer model
 embed_model = SentenceTransformer("all-MiniLM-L6-v2")
 
 # Embed scraped questions
 def refresh_embeddings():
-    global combined_data, embeddings, answers, all_questions, question_to_answer_idx
+    global combined_data, embeddings, answers, all_texts, url_list
     with open("scraped_data.json", "r", encoding="utf-8") as f:
         combined_data = json.load(f)
-    all_questions = []
+    all_texts = []
     answers = []
-    question_to_answer_idx = []
-    for idx, entry in enumerate(combined_data):
-        for q in entry.get("questions", []):
-            all_questions.append(q.lower().strip())
-            answers.append(entry["answer"])
-            question_to_answer_idx.append(idx)
-    embeddings = embed_model.encode(all_questions, convert_to_tensor=True)
+    url_list = []
+    for entry in combined_data:
+        text = entry.get("answer", "")
+        all_texts.append(text)
+        answers.append(text)
+        url_list.append(entry.get("url", ""))
+    embeddings = embed_model.encode(all_texts, convert_to_tensor=True)
 
 refresh_embeddings()
 
@@ -57,33 +53,35 @@ def lookup_knowledge(user_input):
     user_embedding = embed_model.encode(user_input, convert_to_tensor=True)
     scores = util.cos_sim(user_embedding, embeddings)[0]
     top_idx = torch.argmax(scores).item()
-    return answers[top_idx], scores[top_idx].item(), question_to_answer_idx[top_idx]
+    return answers[top_idx], scores[top_idx].item(), url_list[top_idx]
 
 def respond(user_input):
     urls = re.findall(r'https?://\S+', user_input)
     for url in urls:
         print(add_url(url))
     refresh_embeddings()
-    answer, score, idx = lookup_knowledge(user_input)
-    # Add user input to conversation history
+    answer, score, url = lookup_knowledge(user_input)
     conversation_history.append(f"User: {user_input}")
     # Add last bot answer to history (if not first turn)
     if len(conversation_history) > 1:
         conversation_history.append(f"Bot: {answer}")
-    # Improved system prompt with memory
+    # Build context for Mistral
     history = '\n'.join(conversation_history[-6:])  # last 3 turns
+    if not answer or score < 0.3:
+        context = "No relevant information found in the company data."
+    else:
+        context = f"{answer}\n(Source: {url})"
     prompt = (
         "You are Assistbot, the official digital assistant for Better Analytics, a technology company. "
         "Whenever the user refers to 'the company', 'this company', or similar terms, always interpret it as referring to Better Analytics. "
         "Always answer using only the provided context. "
         "If the context does not answer the user's question, politely say you don't know. "
         "Be concise, professional, and helpful.\n"
-        f"Context: {answer}\n"
+        f"Context: {context}\n"
         f"Conversation history:\n{history}\n"
         f"User question: {user_input}"
     )
     response = query_ollama_mistral(prompt)
-    # Add bot response to history
     conversation_history.append(f"Bot: {response}")
     return response
 
