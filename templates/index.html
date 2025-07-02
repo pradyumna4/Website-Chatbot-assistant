@@ -28,6 +28,10 @@
       background: url('https://www.transparenttextures.com/patterns/diamond-upholstery.png');
       opacity: 0.10;
     }
+    /* Remove any extra dropdowns below the chat input area */
+    #chat-input-area + select {
+      display: none !important;
+    }
   </style>
 </head>
 <body>
@@ -44,12 +48,32 @@
     <div id="typing-indicator" class="typing-indicator" style="display:none;">
       <span></span><span></span><span></span> Bot is typing...
     </div>
-    <div id="chat-input-area">
-      <input type="text" id="chat-input" placeholder="Ask me anything about Better Analytics..." autocomplete="off" />
-      <button onclick="sendMessage()" aria-label="Send"><i class="fa fa-paper-plane"></i></button>
+    <div id="chat-input-area" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; background: #fffbe6; border-radius: 10px; padding: 10px 8px; box-shadow: 0 2px 8px #0001; margin-top: 8px;">
+      <input type="text" id="chat-input" placeholder="Ask me anything about Better Analytics..." autocomplete="off" style="flex: 1 1 200px; min-width: 120px; max-width: 350px; border-radius: 6px; border: 1px solid #ccc; padding: 8px; font-size: 1em; background: #fff;" />
+      <button onclick="sendMessage()" aria-label="Send" style="flex: 0 0 auto; background: #ffb300; color: #fff; border: none; border-radius: 6px; padding: 8px 12px; font-size: 1.1em; cursor: pointer;"><i class="fa fa-paper-plane"></i></button>
+      <button id="mic-btn" aria-label="Speak" style="flex: 0 0 auto; background: #ffb300; color: #fff; border: none; border-radius: 6px; padding: 8px 12px; font-size: 1.1em; cursor: pointer;"><i class="fa fa-microphone"></i></button>
+      <button id="speak-btn" aria-label="Read response" style="flex: 0 0 auto; background: #ffb300; color: #fff; border: none; border-radius: 6px; padding: 8px 12px; font-size: 1.1em; cursor: pointer;"><i class="fa fa-volume-up"></i></button>
+      <select id="lang-select" style="flex: 0 0 auto; min-width: 100px; padding: 8px 10px; border-radius: 6px; border: 1px solid #ccc; font-size: 1em; background: #fff;">
+        <option value="en">English</option>
+        <option value="hi">Hindi</option>
+        <option value="ta">Tamil</option>
+        <option value="ml">Malayalam</option>
+        <option value="kn">Kannada</option>
+      </select>
+      <span id="mic-status" style="margin-left:8px;color:#e74c3c;display:none;font-weight:bold;">Listening...</span>
     </div>
   </div>
 
   <script src="/static/chat.js"></script>
+  <script>
+    // Only one language select for both input and output
+    const langSelect = document.getElementById('lang-select');
+    if (langSelect) {
+      langSelect.addEventListener('change', function() {
+        window.selectedLang = this.value;
+      });
+      window.selectedLang = langSelect.value;
+    }
+  </script>
 </body>
 </html>

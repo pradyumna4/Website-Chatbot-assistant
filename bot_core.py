@@ -4,15 +4,12 @@ import torch
 import json
 import requests
 from sentence_transformers import SentenceTransformer, util
-from huggingface_hub import login
 from scraper_module import add_url, load_scraped_data
+from translator import translate
 import re
 
-# Optional: Only if you're using private HF models
-login(token="Enter your Huggingface token here")
-
-# Load sentence transformer model
-embed_model = SentenceTransformer("all-MiniLM-L6-v2")
+# Load multilingual sentence transformer model
+embed_model = SentenceTransformer("paraphrase-multilingual-MiniLM-L12-v2")
 
 # Embed scraped questions
 def refresh_embeddings():
@@ -59,18 +56,17 @@ def lookup_knowledge(user_input):
     top_idx = torch.argmax(scores).item()
     return answers[top_idx], scores[top_idx].item(), question_to_answer_idx[top_idx]
 
-def respond(user_input):
-    urls = re.findall(r'https?://\S+', user_input)
+def respond(user_input, user_lang="en"):  # user_lang: ISO code, e.g. 'hi', 'en', 'ta'
+    # Always process and answer in English
+    user_input_en = translate(user_input, user_lang, "en")
+    urls = re.findall(r'https?://\S+', user_input_en)
     for url in urls:
         print(add_url(url))
     refresh_embeddings()
-    answer, score, idx = lookup_knowledge(user_input)
-    # Add user input to conversation history
-    conversation_history.append(f"User: {user_input}")
-    # Add last bot answer to history (if not first turn)
+    answer, score, idx = lookup_knowledge(user_input_en)
+    conversation_history.append(f"User: {user_input_en}")
     if len(conversation_history) > 1:
         conversation_history.append(f"Bot: {answer}")
-    # Improved system prompt with memory
     history = '\n'.join(conversation_history[-6:])  # last 3 turns
     prompt = (
         "You are Assistbot, the official digital assistant for Better Analytics, a technology company. "
@@ -80,12 +76,16 @@ def respond(user_input):
         "Be concise, professional, and helpful.\n"
         f"Context: {answer}\n"
         f"Conversation history:\n{history}\n"
-        f"User question: {user_input}"
+        f"User question: {user_input_en}"
     )
-    response = query_ollama_mistral(prompt)
-    # Add bot response to history
-    conversation_history.append(f"Bot: {response}")
-    return response
+    response_en = query_ollama_mistral(prompt)
+    # Handle Ollama errors gracefully
+    if response_en.startswith("[Ollama Error]"):
+        print(response_en)  # Log the error for debugging
+        response_en = "Sorry, I'm having trouble connecting to the server. Please try again later."
+    conversation_history.append(f"Bot: {response_en}")
+    # Always return the response in English, regardless of user_lang
+    return response_en
 
 if __name__ == "__main__":
     print(START_MESSAGE)

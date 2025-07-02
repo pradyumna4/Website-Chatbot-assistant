@@ -4,6 +4,7 @@ const messages = document.getElementById("chat-messages");
 const input = document.getElementById("chat-input");
 const typingIndicator = document.getElementById("typing-indicator");
 const chatToggle = document.getElementById("chat-toggle");
+const langSelect = document.getElementById("lang-select");
 let isDragging = false, dragOffsetX = 0, dragOffsetY = 0;
 
 function toggleChat() {
@@ -62,7 +63,7 @@ async function sendMessage() {
     const res = await fetch("/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message: userText })
+      body: JSON.stringify({ message: userText, lang: langSelect.value })
     });
     const data = await res.json();
     showTyping(false);
@@ -103,3 +104,61 @@ window.addEventListener('resize', () => {
   chatBox.style.right = '20px';
   chatBox.style.bottom = '100px';
 });
+
+// --- Speech Recognition (Speech-to-Text) ---
+const micBtn = document.getElementById("mic-btn");
+const micStatus = document.getElementById("mic-status");
+let recognition;
+
+if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  recognition = new SpeechRecognition();
+  recognition.interimResults = false;
+  recognition.maxAlternatives = 1;
+
+  micBtn.onclick = () => {
+    recognition.lang = langSelect.value + "-IN";
+    recognition.start();
+    micBtn.classList.add("listening");
+    micStatus.style.display = "inline";
+  };
+
+  recognition.onresult = (event) => {
+    const transcript = event.results[0][0].transcript;
+    micBtn.classList.remove("listening");
+    micStatus.style.display = "none";
+    input.value = transcript;
+    setTimeout(() => { sendMessage(); }, 400);
+  };
+  recognition.onerror = () => {
+    micBtn.classList.remove("listening");
+    micStatus.style.display = "none";
+  };
+  recognition.onend = () => {
+    micBtn.classList.remove("listening");
+    micStatus.style.display = "none";
+  };
+} else {
+  micBtn.style.display = "none";
+  micStatus.style.display = "none";
+}
+
+// --- Text-to-Speech (SpeechSynthesis) ---
+const speakBtn = document.getElementById("speak-btn");
+let lastBotMsg = "";
+function speak(text) {
+  if (!window.speechSynthesis) return;
+  const utter = new SpeechSynthesisUtterance(text);
+  utter.lang = "en-US";
+  window.speechSynthesis.speak(utter);
+}
+speakBtn.onclick = () => {
+  if (lastBotMsg) speak(lastBotMsg);
+};
+
+// Save last bot message for TTS
+const origAddMessage = addMessage;
+addMessage = function(sender, text) {
+  origAddMessage(sender, text);
+  if (sender === "bot") lastBotMsg = text.replace(/<[^>]+>/g, '');
+};
