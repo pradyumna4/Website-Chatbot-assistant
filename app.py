@@ -14,7 +14,8 @@ def index():
 def chat():
     data = request.get_json()
     user_message = data.get("message", "")
-    bot_response = respond(user_message)
+    user_lang = data.get("lang", "en")  # Get language from frontend
+    bot_response = respond(user_message, user_lang)
     return jsonify({"response": bot_response})
 
 if __name__ == "__main__":

@@ -3,3 +3,6 @@ playwright
 sentence-transformers
 torch
 requests
+deep-translator
+flask
+flask-cors
